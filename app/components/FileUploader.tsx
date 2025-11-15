@@ -274,8 +274,8 @@ export default function FileUploader({ onUploadComplete }: FileUploaderProps = {
                   ? 'Drop your file here'
                   : 'Drag & drop a PDF or image file'}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                or click to browse (PDF, PNG, JPG - max 10MB)
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                or click to browse (PDF max 3-4 pages/1MB, PNG, JPG - max 10MB)
               </p>
             </>
           )}
