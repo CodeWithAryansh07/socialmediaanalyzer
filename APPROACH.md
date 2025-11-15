@@ -11,12 +11,12 @@ For file handling, react-dropzone provides an intuitive drag-and-drop interface 
 ### Text Extraction
 The extraction stage uses two specialized endpoints:
 - **PDF Processing**: `pdf-parse` library for PDF files with server-side processing
-- **OCR Processing**: Tesseract.js for images, running in Node.js for faster processing compared to browser-based execution
+- **OCR Processing**: OCR.space API for images with automatic compression using Sharp to handle files under 1MB limit, providing fast and accurate text extraction
 
-Both endpoints convert uploaded files to buffers and process them server-side, ensuring better performance and security.
+Both endpoints convert uploaded files to buffers and process them server-side, ensuring better performance and security. Images are automatically compressed if they exceed 900KB to meet API requirements while maintaining OCR accuracy.
 
 ### AI Analysis
-The AI analysis utilizes Google Gemini's `gemini-1.5-flash` model via their free tier API. The prompt engineering instructs the model to act as a social media expert, returning structured JSON with specific engagement metrics including:
+The AI analysis utilizes Google Gemini's `gemini-pro` model via their free tier API. The prompt engineering instructs the model to act as a social media expert, returning structured JSON with specific engagement metrics including:
 - Content summary
 - 5 actionable engagement suggestions
 - 5 relevant hashtags
@@ -42,10 +42,13 @@ The Next.js API routes handle CORS automatically, and the serverless architectur
 
 - **Next.js 16**: Latest features, App Router for better performance
 - **Google Gemini API**: Free tier, excellent JSON output, fast response times
-- **Tesseract.js**: Open-source OCR, no API limits or costs
+- **OCR.space API**: Free tier OCR service with 25K requests/month
+- **Sharp**: High-performance image processing for compression
 - **pdf-parse**: Lightweight, server-side PDF processing
 - **react-dropzone**: Industry-standard drag-and-drop library
 - **Tailwind CSS v4**: Utility-first styling with minimal bundle size
+- **NextAuth.js**: Authentication with credentials provider
+- **MongoDB & Mongoose**: User data and upload history storage
 
 ## Performance Considerations
 

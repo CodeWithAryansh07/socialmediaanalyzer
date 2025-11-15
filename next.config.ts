@@ -7,6 +7,14 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  // Optimize for Vercel deployment
+  images: {
+    domains: [],
+  },
+  // Enable production optimizations
+  productionBrowserSourceMaps: false,
+  compress: true,
+  poweredByHeader: false,
 };
 
 export default nextConfig;

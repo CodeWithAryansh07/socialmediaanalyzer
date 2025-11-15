@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     // Convert file to buffer
     const bytes = await file.arrayBuffer();
-    let imageBuffer = Buffer.from(bytes);
+    let imageBuffer: Buffer = Buffer.from(bytes);
 
     // Compress image if larger than 900KB to ensure it's under 1MB limit
     const maxSizeKB = 900;
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       console.log(`Image too large (${Math.round(imageBuffer.length / 1024)}KB), compressing...`);
       
       // Resize and compress the image while maintaining quality for OCR
-      imageBuffer = await sharp(imageBuffer)
+      const compressed = await sharp(imageBuffer)
         .resize(3000, 3000, { // Larger max dimensions to preserve text clarity
           fit: 'inside',
           withoutEnlargement: true
@@ -42,14 +42,16 @@ export async function POST(request: NextRequest) {
         })
         .toBuffer();
       
+      imageBuffer = Buffer.from(compressed);
       console.log(`Compressed to ${Math.round(imageBuffer.length / 1024)}KB`);
       
       // If still too large, try more aggressive compression
       if (imageBuffer.length > maxSizeKB * 1024) {
         console.log('Still too large, applying more compression...');
-        imageBuffer = await sharp(imageBuffer)
+        const moreCompressed = await sharp(imageBuffer)
           .jpeg({ quality: 80 })
           .toBuffer();
+        imageBuffer = Buffer.from(moreCompressed);
         console.log(`Final size: ${Math.round(imageBuffer.length / 1024)}KB`);
       }
     }

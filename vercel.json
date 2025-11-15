@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 60
+    }
+  },
+  "env": {
+    "MONGODB_URI": "@mongodb-uri",
+    "GEMINI_API_KEY": "@gemini-api-key",
+    "NEXTAUTH_SECRET": "@nextauth-secret",
+    "NEXTAUTH_URL": "@nextauth-url"
+  }
+}

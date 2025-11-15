@@ -1,13 +1,15 @@
 # Social Media Content Analyzer 📱✨
 
-A Next.js application that analyzes social media posts from uploaded PDF and image files, extracting text using OCR and providing AI-powered engagement improvement suggestions.
+A Next.js application that analyzes social media posts from uploaded PDF and image files, extracting text using OCR and providing AI-powered engagement improvement suggestions. Now with user authentication and upload history!
 
 ## Features
 
 - **📄 PDF Text Extraction**: Upload PDF files and extract text while maintaining formatting
-- **🖼️ OCR for Images**: Extract text from scanned documents and images using Tesseract.js
+- **🖼️ OCR for Images**: Extract text from images using OCR.space API with automatic compression
 - **🤖 AI-Powered Analysis**: Get intelligent suggestions using Google Gemini AI
 - **💡 Engagement Insights**: Receive recommendations for hashtags, posting times, tone adjustments, and content improvements
+- **👤 User Authentication**: Secure login and registration with NextAuth.js
+- **💾 Upload History**: Save and view your analysis history in MongoDB
 - **🎨 Modern UI**: Clean, responsive interface with drag-and-drop file upload
 - **🌓 Dark Mode**: Full dark mode support
 - **📋 Copy to Clipboard**: Easily copy extracted text and suggestions
@@ -17,9 +19,11 @@ A Next.js application that analyzes social media posts from uploaded PDF and ima
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS v4
+- **Authentication**: NextAuth.js with JWT
+- **Database**: MongoDB with Mongoose
 - **PDF Processing**: pdf-parse
-- **OCR Engine**: Tesseract.js
-- **AI Service**: Google Gemini API (gemini-1.5-flash)
+- **Image Processing**: Sharp (compression) + OCR.space API
+- **AI Service**: Google Gemini API (gemini-pro)
 - **File Upload**: react-dropzone
 
 ## Getting Started
@@ -28,8 +32,9 @@ A Next.js application that analyzes social media posts from uploaded PDF and ima
 
 - Node.js 20+ installed
 - A Google Gemini API key (free tier available)
+- MongoDB Atlas account (free tier available)
 
-### Installation
+### Quick Setup
 
 1. Clone the repository:
 ```bash
@@ -45,9 +50,14 @@ npm install
 3. Set up environment variables:
    - Copy `.env.example` to `.env.local`
    - Get your free Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Add your API key to `.env.local`:
+   - Set up MongoDB Atlas at [cloud.mongodb.com](https://cloud.mongodb.com/)
+   - Generate a NextAuth secret (see [AUTH_SETUP.md](AUTH_SETUP.md))
+   - Update `.env.local`:
 ```env
 GEMINI_API_KEY=your_actual_api_key_here
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/socialmediaanalyzer
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_generated_secret_here
 ```
 
 4. Run the development server:
@@ -57,13 +67,27 @@ npm run dev
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
+## Detailed Setup Guides
+
+- **[AUTH_SETUP.md](AUTH_SETUP.md)** - Complete authentication and MongoDB setup guide
+- **[FEATURES.md](FEATURES.md)** - Full feature list and technical details
+- **[APPROACH.md](APPROACH.md)** - Technical implementation approach
+- **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide for development
+
 ## Usage
 
-1. **Upload a File**: Drag and drop or click to select a PDF or image file (PNG, JPG, JPEG)
+### As Guest
+1. **Upload a File**: Drag and drop or click to select a PDF or image file
 2. **Text Extraction**: The app automatically extracts text from your file
-3. **AI Analysis**: Google Gemini AI analyzes the content as a social media post
-4. **View Suggestions**: Review engagement improvements, hashtags, posting times, and tone recommendations
-5. **Copy & Export**: Copy extracted text or suggestions for use in your social media campaigns
+3. **AI Analysis**: Google Gemini AI analyzes the content
+4. **View Suggestions**: Review engagement improvements and recommendations
+
+### As Registered User
+1. **Sign Up**: Create an account with email and password
+2. **Sign In**: Log in to access your dashboard
+3. **Upload Files**: Same as guest, but uploads are saved automatically
+4. **View History**: Access all your previous analyses in the dashboard
+5. **Track Progress**: See your upload history with timestamps
 
 ## Project Structure
 
@@ -71,17 +95,37 @@ npm run dev
 socialmediaanalyzer/
 ├── app/
 │   ├── api/
-│   │   ├── extract-pdf/      # PDF text extraction endpoint
-│   │   ├── extract-image/    # OCR image processing endpoint
-│   │   └── analyze/          # AI analysis endpoint
+│   │   ├── auth/
+│   │   │   ├── [...nextauth]/  # NextAuth.js configuration
+│   │   │   └── register/       # User registration endpoint
+│   │   ├── extract-pdf/        # PDF text extraction endpoint
+│   │   ├── extract-image/      # OCR image processing endpoint
+│   │   ├── analyze/            # AI analysis endpoint
+│   │   └── uploads/            # Upload save/fetch endpoints
+│   ├── auth/
+│   │   ├── signin/             # Sign in page
+│   │   └── signup/             # Sign up page
 │   ├── components/
-│   │   └── FileUploader.tsx  # Main upload and results component
+│   │   ├── FileUploader.tsx    # Main upload and results component
+│   │   └── Providers.tsx       # NextAuth session provider
+│   ├── dashboard/
+│   │   └── page.tsx            # User dashboard with history
+│   ├── models/
+│   │   ├── User.ts             # User MongoDB model
+│   │   └── Upload.ts           # Upload MongoDB model
 │   ├── globals.css
 │   ├── layout.tsx
-│   └── page.tsx              # Home page
+│   └── page.tsx                # Home page
+├── lib/
+│   └── mongodb.ts              # MongoDB connection utility
+├── types/
+│   ├── pdf-parse.d.ts          # PDF parse type definitions
+│   └── next-auth.d.ts          # NextAuth type definitions
 ├── public/
-├── .env.example              # Environment variables template
-├── .env.local               # Your local environment variables (gitignored)
+├── .env.local                  # Environment variables (gitignored)
+├── AUTH_SETUP.md               # Authentication setup guide
+├── FEATURES.md                 # Complete feature list
+├── APPROACH.md                 # Technical approach
 ├── next.config.ts
 ├── package.json
 └── README.md
@@ -89,32 +133,18 @@ socialmediaanalyzer/
 
 ## API Endpoints
 
-### POST /api/extract-pdf
-Extracts text from uploaded PDF files.
+### Authentication
+- **POST /api/auth/register** - User registration
+- **POST /api/auth/[...nextauth]** - NextAuth.js authentication handlers
 
-**Request**: FormData with `file` field (PDF)  
-**Response**: `{ text: string }`
+### File Processing
+- **POST /api/extract-pdf** - Extracts text from PDF files
+- **POST /api/extract-image** - OCR for images with automatic compression
+- **POST /api/analyze** - AI analysis of extracted text
 
-### POST /api/extract-image
-Performs OCR on uploaded images to extract text.
-
-**Request**: FormData with `file` field (PNG, JPG, JPEG)  
-**Response**: `{ text: string }`
-
-### POST /api/analyze
-Analyzes extracted text and provides social media engagement suggestions.
-
-**Request**: `{ text: string }`  
-**Response**:
-```json
-{
-  "summary": "Content summary",
-  "suggestions": ["suggestion 1", "..."],
-  "hashtags": ["#tag1", "#tag2", "..."],
-  "bestTimeToPost": "Timing recommendation",
-  "toneRecommendations": "Tone guidance"
-}
-```
+### User Data
+- **GET /api/uploads** - Get user's upload history (authenticated)
+- **POST /api/uploads/save** - Save analysis to database (authenticated)
 
 ## Deployment
 
@@ -122,28 +152,25 @@ Analyzes extracted text and provides social media engagement suggestions.
 
 1. Push your code to GitHub
 2. Import your repository on [Vercel](https://vercel.com)
-3. Add the `GEMINI_API_KEY` environment variable in Vercel project settings
+3. Add environment variables in Vercel project settings:
+   - `GEMINI_API_KEY`
+   - `MONGODB_URI`
+   - `NEXTAUTH_URL` (your production URL)
+   - `NEXTAUTH_SECRET` (generate a new one for production)
 4. Deploy!
 
-The app will automatically deploy on every push to your main branch.
-
-## Technical Approach (200 words)
-
-This application leverages Next.js 16's App Router for optimal performance and developer experience. The architecture follows a three-stage pipeline: upload, extraction, and analysis.
-
-For file handling, react-dropzone provides an intuitive drag-and-drop interface with client-side validation. The extraction stage uses two specialized endpoints: pdf-parse for PDF files (server-side processing with node-canvas dependencies) and Tesseract.js for OCR on images, running in Node.js for faster processing compared to browser-based execution.
-
-The AI analysis utilizes Google Gemini's gemini-1.5-flash model via their free tier API. The prompt engineering instructs the model to act as a social media expert, returning structured JSON with specific engagement metrics including hashtags, posting times, and tone recommendations. Error handling includes JSON parsing fallbacks to ensure reliability.
-
-The UI implements progressive disclosure: users see loading states during extraction and analysis phases, with results displayed in organized sections. Tailwind CSS v4 provides responsive styling with dark mode support.
-
-All file processing occurs in-memory without persistent storage, ensuring privacy and simplifying deployment. The Next.js API routes handle CORS automatically, and the serverless architecture scales efficiently on Vercel's platform.
+**Important**: Update MongoDB Atlas Network Access to allow connections from Vercel's IP addresses.
 
 ## Environment Variables
 
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `GEMINI_API_KEY` | Google Gemini API key for AI analysis | Yes |
+| `MONGODB_URI` | MongoDB connection string | Yes |
+| `NEXTAUTH_URL` | Application URL (http://localhost:3000 for dev) | Yes |
+| `NEXTAUTH_SECRET` | Random secret for JWT signing | Yes |
+
+See [AUTH_SETUP.md](AUTH_SETUP.md) for detailed setup instructions.
 
 ## License
 
